@@ -1,0 +1,1494 @@
+<!DOCTYPE html> <html style lang=en><!--
+ Page saved with SingleFile 
+ url: https://begriffs.com/posts/2019-05-23-unicode-icu.html 
+ saved date: Mon Jan 04 2021 17:56:28 GMT+0800 (China Standard Time)
+--><meta charset=utf-8>
+<meta name=viewport content="width=device-width, initial-scale=1">
+<meta name=twitter:card content=summary_large_image>
+<meta name=twitter:domain content=begriffs.com>
+<meta name=twitter:title content="Unicode programming, with examples">
+<meta name=twitter:description content="The design of Unicode illustrated with the ICU4C API">
+<meta name=twitter:image content=https://begriffs.com/images/unicode-logo.png>
+<meta property=og:title content="Unicode programming, with examples">
+<meta property=og:image content=https://begriffs.com/images/unicode-logo.png>
+<meta property=og:description content="The design of Unicode illustrated with the ICU4C API">
+<title>Unicode programming, with examples</title>
+<style>body{margin:0}footer{display:block}a{background:transparent}a:active,a:hover{outline:0}strong{font-weight:bold}sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-0.5em}img{border:0}pre{overflow:auto}button,input{color:inherit;font:inherit;margin:0}button{overflow:visible}button{text-transform:none}button{-webkit-appearance:button}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}table{border-collapse:collapse;border-spacing:0}*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}*:before,*:after{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:rgba(0,0,0,0)}body{font-family:Georgia,"Times New Roman",Times,serif;font-size:16px;line-height:1.42857143;color:#333333;background-color:#ffffff}input{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#4582ec;text-decoration:none}a:hover,a:focus{color:#134fb8;text-decoration:underline}a:focus{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}img{vertical-align:middle}h2,h3,h4,h5{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:bold;line-height:1.1;color:inherit}h2,h3{margin-top:22px;margin-bottom:11px}h4,h5{margin-top:11px;margin-bottom:11px}h2{font-size:34px}h3{font-size:28px}h4{font-size:20px}h5{font-size:16px}p{margin:0 0 11px}.text-muted{color:#b3b3b3}ul,ol{margin-top:0;margin-bottom:11px}ul ul{margin-bottom:0}.list-inline{list-style:none;margin-left:-5px}.list-inline>li{display:inline-block;padding-left:5px;padding-right:5px}code,pre{font-family:Menlo,Monaco,Consolas,"Courier New",monospace}code{padding:2px 4px;font-size:90%;border-radius:4px}pre{display:block;padding:10.5px;margin:0 0 11px;font-size:15px;line-height:1.42857143;word-break:break-all;word-wrap:break-word;border:1px solid #cccccc;border-radius:4px}pre code{padding:0;font-size:inherit;border-radius:0}.container{margin-right:auto;margin-left:auto;padding-left:15px;padding-right:15px}@media (min-width:768px){.container{width:750px}}@media (min-width:992px){.container{width:970px}}@media (min-width:1200px){.container{width:1170px}}.row{margin-left:-15px;margin-right:-15px}.col-sm-3,.col-sm-9{position:relative;min-height:1px;padding-left:15px;padding-right:15px}@media (min-width:768px){.col-sm-3,.col-sm-9{float:left}.col-sm-9{width:75%}.col-sm-3{width:25%}}table{background-color:transparent}th{text-align:left}.table{width:100%;max-width:100%;margin-bottom:22px}.table>thead>tr>th,.table>tbody>tr>td{padding:8px;line-height:1.42857143;vertical-align:top;border-top:1px solid #dddddd}.table>thead>tr>th{vertical-align:bottom;border-bottom:2px solid #dddddd}.table>caption+thead>tr:first-child>th,.table>colgroup+thead>tr:first-child>th,.table>thead:first-child>tr:first-child>th,.table>caption+thead>tr:first-child>td,.table>colgroup+thead>tr:first-child>td,.table>thead:first-child>tr:first-child>td{border-top:0}label{display:inline-block;max-width:100%;margin-bottom:5px;font-weight:bold}.form-control{display:block;width:100%;height:40px;padding:8px 12px;font-size:16px;line-height:1.42857143;color:#333333;background-color:#ffffff;background-image:none;border:1px solid #dddddd;border-radius:4px;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,0.075);box-shadow:inset 0 1px 1px rgba(0,0,0,0.075);-webkit-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;-o-transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s;transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s}.form-control:focus{border-color:#66afe9;outline:0;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,0.075),0 0 8px rgba(102,175,233,0.6);box-shadow:inset 0 1px 1px rgba(0,0,0,0.075),0 0 8px rgba(102,175,233,0.6)}.form-control::-moz-placeholder{color:#b3b3b3;opacity:1}.form-control::-webkit-input-placeholder{color:#b3b3b3}.form-group{margin-bottom:15px}.btn{display:inline-block;margin-bottom:0;font-weight:normal;text-align:center;vertical-align:middle;cursor:pointer;background-image:none;border:1px solid transparent;white-space:nowrap;padding:8px 12px;font-size:16px;line-height:1.42857143;border-radius:4px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.btn:focus,.btn:active:focus,.btn.active:focus{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}.btn:hover,.btn:focus{color:#333333;text-decoration:none}.btn:active,.btn.active{outline:0;background-image:none;-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,0.125);box-shadow:inset 0 3px 5px rgba(0,0,0,0.125)}.btn-primary{color:#ffffff;background-color:#4582ec;border-color:#4582ec}.btn-primary:hover,.btn-primary:focus,.btn-primary:active,.btn-primary.active,.open>.dropdown-toggle.btn-primary{color:#ffffff;background-color:#1863e6;border-color:#175fdd}.btn-primary:active,.btn-primary.active,.open>.dropdown-toggle.btn-primary{background-image:none}@-webkit-keyframes progress-bar-stripes{from{background-position:40px 0}to{background-position:0 0}}@keyframes progress-bar-stripes{from{background-position:40px 0}to{background-position:0 0}}.well{min-height:20px;margin-bottom:20px;background-color:#f7f7f7;border:1px solid #e5e5e5;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,0.05);box-shadow:inset 0 1px 1px rgba(0,0,0,0.05)}.well-lg{padding:24px;border-radius:6px}.clearfix:before,.clearfix:after,.dl-horizontal dd:before,.dl-horizontal dd:after,.container:before,.container:after,.container-fluid:before,.container-fluid:after,.row:before,.row:after,.form-horizontal .form-group:before,.form-horizontal .form-group:after,.btn-toolbar:before,.btn-toolbar:after,.btn-group-vertical>.btn-group:before,.btn-group-vertical>.btn-group:after,.nav:before,.nav:after,.navbar:before,.navbar:after,.navbar-header:before,.navbar-header:after,.navbar-collapse:before,.navbar-collapse:after,.pager:before,.pager:after,.panel-body:before,.panel-body:after,.modal-footer:before,.modal-footer:after{content:" ";display:table}.clearfix:after,.dl-horizontal dd:after,.container:after,.container-fluid:after,.row:after,.form-horizontal .form-group:after,.btn-toolbar:after,.btn-group-vertical>.btn-group:after,.nav:after,.navbar:after,.navbar-header:after,.navbar-collapse:after,.pager:after,.panel-body:after,.modal-footer:after{clear:both}@-ms-viewport{width:device-width}.btn{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}.container{max-width:730px}.header{margin-bottom:4em;margin-top:3em}@media (max-width:767px){.header{margin-bottom:1em;margin-top:1em}}li{margin-bottom:0.5em}li>ul>li:first-child{margin-top:0.5em}body{padding-bottom:4em}.post-header{border-bottom:1px solid #b3b3b3;margin-bottom:3em}.post-header h3{margin-bottom:1.5em}.post-header h5{display:inline}pre.sourceCode{margin:2em 0;text-rendering:geometricPrecision}.content{text-rendering:optimizeLegibility;line-height:1.75em;letter-spacing:0.03rem;-webkit-font-feature-settings:"kern","liga","case";-moz-font-feature-settings:"kern=1","liga=1","case=1";-moz-font-feature-settings:"kern","liga","case";-moz-font-feature-settings:"kern" 1,"liga" 1,"case" 1;font-feature-settings:"kern","liga","case"}.content p{line-height:1.58;margin:1.5em 0;font-size:1.8rem;color:#3A4145}.content>h4,.content>h3{margin:2em 0 1em 0}footer{margin-top:3em;text-align:center}.newsletter{text-align:left}.content pre,.content code{-webkit-font-feature-settings:"kern" off,"liga" off,"case" off;-moz-font-feature-settings:"kern=0","liga=0","case=0";-moz-font-feature-settings:"kern" off,"liga" off,"case" off;-moz-font-feature-settings:"kern" 0,"liga" 0,"case" 0;font-feature-settings:"kern" off,"liga" off,"case" off;color:inherit;background-color:#f6f6f6}.content code{white-space:pre;overflow-x:auto}code>span.kw{color:#204a87;font-weight:bold}code>span.dt{color:#204a87}code>span.dv{color:#0000cf}code>span.bn{color:#0000cf}code>span.ch{color:#4e9a06}code>span.st{color:#4e9a06}code>span.co{color:#8f5902;font-style:italic}code>span.fu{color:#000000}</style>
+<link rel=pgpkey type=application/pgp-keys href=https://begriffs.com/pgp.asc title="Joe Nelson's public PGP key">
+<meta name=msapplication-config content=/images/icon/browserconfig.xml>
+<meta name=theme-color content=#ffffff>
+<link rel=icon type=image/png href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfhBBIRDBy7DIFXAAADcklEQVRIx4VVXWhcRRT+zty5d/fummTbRtMaGvtnEKG1YBWKiA8lWKgsba2CqULpS7G0ICKCIIKCldYnhYItNtoHKYL0h0Ifig9RI4LEpNI2VVqKJvTHxJBmN5vd+3t8uHf3nru7rfM0c86Zb77znTMzBEI8HD7Zv/SgygDsOUdXT2wmcOyKZlFkYgMA1miMuzBXmHtVDmAnPJedaAThPjMAIJXMjZTHlac9YAiA+f+PfjBAmlsQnc9NLFrWWvoIbQffx0oAKAWQRBJvxtHu3MOddshuUJ79Z3rQO2dbJgC+VT3sg0ARtABwBFaw4buBRwdohcqArTA32/3LzydWbsluQxBWH3p7dHxTI2sdU2GgmqRgZT9UufqSoJbpfr2VfdULYFF1LojUdLJLlFpRvjlloyeJM+oTThgQuNaiU3jHH4XWz6jutD1TF5FkGSnXJLf3/Xzxx12/7Sjt9EbSAJYgrBrycyVVRv9SaX9h9DP3kGP/VH4z+EMCLIiiKVBcEioIBhy6xweuFwkE2kWDV9wh4YMdMaAIoN5vXJXZ/1sdSXQchzPMc4mIrohUsYQEykjznJrpahTLQ2UmLCXekuhOcRdET4E1a6+hjg2tyWiK5BaArNTpEbX2SswMtIBcP4lSdjUUSAHIIqoO+/XzFjMAMP+azQwqge+IKgjeUgPAfO2Jy0eOHXc0jtirDpo7pa8i+kAAlFMAKm8fWvesewZ63cvmS2RLn1WnS2nlmgblrd3mqyBqibHExVHttoaLHJeaTGpzhDSlHlXm0A29MHQuVN7xx8NF5rjLAv9P52wMykYQCMUF2HpcvIrdygC7k/suH/s2/6S5hh6nAt8LJko/dDxvFQEANaNcbc+GCLO48A28Hm2O8HPTmMZw5DmMq0bxhegLCO/M3+2P3gICN2tALmp9nV8WTt3Y1EPvx8ZP8S62bjN3RKtg+MD00/UXG6KjopYZ6l1yQr9ICP52v66dv/fXTLWglyzPF7NvqV4ACKbK2zeMPUVtUwBcMGARAOOx7AeZAx1TK+eQpT61PLoJYdn5+I0xIKZPLQwA5q/WdH1ibiertXjBVO2jmyff8wjxM9wOAPD5i87uV6w9xnrqiGRjRi2Y9C9Wh87+frrl9yGg5UNi4PNlSzfqjbpP2ez7t4NrlbHrk6uC/ckX39jzHyoZSKke9AWyAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE3LTA0LTE4VDE3OjEyOjI4KzAyOjAw/LlRIwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNy0wNC0xOFQxNzoxMjoyOCswMjowMI3k6Z8AAABXelRYdFJhdyBwcm9maWxlIHR5cGUgaXB0YwAAeJzj8gwIcVYoKMpPy8xJ5VIAAyMLLmMLEyMTS5MUAxMgRIA0w2QDI7NUIMvY1MjEzMQcxAfLgEigSi4A6hcRdPJCNZUAAAAASUVORK5CYII=" sizes=32x32><link rel=canonical href=https://begriffs.com/posts/2019-05-23-unicode-icu.html></head>
+ <body>
+ <div class=container>
+ <div class="header row">
+ <h3><a class="text-muted col-sm-9" rel=home href=https://begriffs.com/>begriffs</a></h3>
+ <ul class="col-sm-3 list-inline">
+ <li><a class=text-muted rel=me href=http://github.com/begriffs><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTc5MiIgaGVpZ2h0PSIxNzkyIiB2aWV3Qm94PSIwIDAgMTc5MiAxNzkyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGw9IiNiM2IzYjMiIGQ9Ik0xNjY0IDg5NnEwIDI1MS0xNDYuNSA0NTEuNXQtMzc4LjUgMjc3LjVxLTI3IDUtMzkuNS03dC0xMi41LTMwdi0yMTFxMC05Ny01Mi0xNDIgNTctNiAxMDIuNS0xOHQ5NC0zOSA4MS02Ni41IDUzLTEwNSAyMC41LTE1MC41cTAtMTIxLTc5LTIwNiAzNy05MS04LTIwNC0yOC05LTgxIDExdC05MiA0NGwtMzggMjRxLTkzLTI2LTE5Mi0yNnQtMTkyIDI2cS0xNi0xMS00Mi41LTI3dC04My41LTM4LjUtODYtMTMuNXEtNDQgMTEzLTcgMjA0LTc5IDg1LTc5IDIwNiAwIDg1IDIwLjUgMTUwdDUyLjUgMTA1IDgwLjUgNjcgOTQgMzkgMTAyLjUgMThxLTQwIDM2LTQ5IDEwMy0yMSAxMC00NSAxNXQtNTcgNS02NS41LTIxLjUtNTUuNS02Mi41cS0xOS0zMi00OC41LTUydC00OS41LTI0bC0yMC0zcS0yMSAwLTI5IDQuNXQtNSAxMS41IDkgMTQgMTMgMTJsNyA1cTIyIDEwIDQzLjUgMzh0MzEuNSA1MWwxMCAyM3ExMyAzOCA0NCA2MS41dDY3IDMwIDY5LjUgNyA1NS41LTMuNWwyMy00cTAgMzggLjUgODl0LjUgNTRxMCAxOC0xMyAzMHQtNDAgN3EtMjMyLTc3LTM3OC41LTI3Ny41dC0xNDYuNS00NTEuNXEwLTIwOSAxMDMtMzg1LjV0Mjc5LjUtMjc5LjUgMzg1LjUtMTAzIDM4NS41IDEwMyAyNzkuNSAyNzkuNSAxMDMgMzg1LjV6Ii8+PC9zdmc+Cg==" alt=Github width=28 height=28></a></li>
+ <li><a class=text-muted rel=me href=mailto:joe@begriffs.com><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTc5MiIgaGVpZ2h0PSIxNzkyIiB2aWV3Qm94PSIwIDAgMTc5MiAxNzkyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGw9IiNiM2IzYjMiIGQ9Ik0xNjY0IDE1MDR2LTc2OHEtMzIgMzYtNjkgNjYtMjY4IDIwNi00MjYgMzM4LTUxIDQzLTgzIDY3dC04Ni41IDQ4LjUtMTAyLjUgMjQuNWgtMnEtNDggMC0xMDIuNS0yNC41dC04Ni41LTQ4LjUtODMtNjdxLTE1OC0xMzItNDI2LTMzOC0zNy0zMC02OS02NnY3NjhxMCAxMyA5LjUgMjIuNXQyMi41IDkuNWgxNDcycTEzIDAgMjIuNS05LjV0OS41LTIyLjV6bTAtMTA1MXYtMjQuNWwtLjUtMTMtMy0xMi41LTUuNS05LTktNy41LTE0LTIuNWgtMTQ3MnEtMTMgMC0yMi41IDkuNXQtOS41IDIyLjVxMCAxNjggMTQ3IDI4NCAxOTMgMTUyIDQwMSAzMTcgNiA1IDM1IDI5LjV0NDYgMzcuNSA0NC41IDMxLjUgNTAuNSAyNy41IDQzIDloMnEyMCAwIDQzLTl0NTAuNS0yNy41IDQ0LjUtMzEuNSA0Ni0zNy41IDM1LTI5LjVxMjA4LTE2NSA0MDEtMzE3IDU0LTQzIDEwMC41LTExNS41dDQ2LjUtMTMxLjV6bTEyOC0zN3YxMDg4cTAgNjYtNDcgMTEzdC0xMTMgNDdoLTE0NzJxLTY2IDAtMTEzLTQ3dC00Ny0xMTN2LTEwODhxMC02NiA0Ny0xMTN0MTEzLTQ3aDE0NzJxNjYgMCAxMTMgNDd0NDcgMTEzeiIvPjwvc3ZnPgo=" alt=Email width=28 height=28></a></li>
+ <li><a class=text-muted href=https://begriffs.com/atom.xml><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTc5MiIgaGVpZ2h0PSIxNzkyIiB2aWV3Qm94PSIwIDAgMTc5MiAxNzkyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGw9IiNiM2IzYjMiIGQ9Ik01NzYgMTM0NHEwIDgwLTU2IDEzNnQtMTM2IDU2LTEzNi01Ni01Ni0xMzYgNTYtMTM2IDEzNi01NiAxMzYgNTYgNTYgMTM2em01MTIgMTIzcTIgMjgtMTcgNDgtMTggMjEtNDcgMjFoLTEzNXEtMjUgMC00My0xNi41dC0yMC00MS41cS0yMi0yMjktMTg0LjUtMzkxLjV0LTM5MS41LTE4NC41cS0yNS0yLTQxLjUtMjB0LTE2LjUtNDN2LTEzNXEwLTI5IDIxLTQ3IDE3LTE3IDQzLTE3aDVxMTYwIDEzIDMwNiA4MC41dDI1OSAxODEuNXExMTQgMTEzIDE4MS41IDI1OXQ4MC41IDMwNnptNTEyIDJxMiAyNy0xOCA0Ny0xOCAyMC00NiAyMGgtMTQzcS0yNiAwLTQ0LjUtMTcuNXQtMTkuNS00Mi41cS0xMi0yMTUtMTAxLTQwOC41dC0yMzEuNS0zMzYtMzM2LTIzMS41LTQwOC41LTEwMnEtMjUtMS00Mi41LTE5LjV0LTE3LjUtNDMuNXYtMTQzcTAtMjggMjAtNDYgMTgtMTggNDQtMThoM3EyNjIgMTMgNTAxLjUgMTIwdDQyNS41IDI5NHExODcgMTg2IDI5NCA0MjUuNXQxMjAgNTAxLjV6Ii8+PC9zdmc+Cg==" alt="Atom Feed" width=28 height=28></a></li>
+ </ul>
+ </div>
+ <div class=content>
+ <div class=h-entry>
+ <div class=post-header>
+ <h3 class=p-name>Unicode programming, with examples</h3>
+ <div class=row>
+ <h5 class="text-muted dt-published col-sm-9">May 23, 2019</h5>
+ <h5 class=col-sm-3>
+ <a class=text-muted href=#newsletter>Newsletter ↳</a>
+ </h5>
+ </div>
+ </div>
+ <div class="content e-content">
+ <p>Most programming languages evolved awkwardly during the transition from ASCII to 16-bit UCS-2 to full Unicode. They contain internationalization features that often aren’t portable or don’t suffice.</p>
+<p>Unicode is more than a numbering scheme for the characters of every language – although that in itself is a useful accomplishment. Unicode also includes characters’ case, directionality, and alphabetic properties. The Unicode standard and specifications describe the proper way to divide words and break lines, sort text, format numbers, display text in different directions, split/combine/reorder vowels South Asian languages, and determine when characters may look visually confusable.</p>
+<p>Human languages are highly varied and internally inconsistent, and any application which treats strings as more than an opaque byte stream must embrace the complexity. Realistically this means using a mature third-party library.</p>
+<p>This article illustrates text processing ideas with example programs. We’ll use the <a href=http://site.icu-project.org/>International Components for Unicode</a> (ICU) library, which is mature, portable, and powers the international text processing behind many products and operating systems.</p>
+<p>IBM (the maintainers of ICU) officially support a C, C++ and Java API. We’ll use the C API here for a better view into the internals. Many languages have bindings to the library, so these concepts should be applicable to your language of choice.</p>
+<p><strong>Table of Contents:</strong></p>
+<ul>
+<li><a href=#concepts>Concepts</a>
+<ul>
+<li><a href=#what-is-a-character>What is a “character?”</a></li>
+<li><a href=#glyphs-vs-graphemes>Glyphs vs graphemes</a></li>
+<li><a href=#how-are-codepoints-encoded>How are codepoints encoded?</a></li>
+<li><a href=#which-encoding-should-you-choose>Which encoding should you choose?</a></li>
+</ul></li>
+<li><a href=#icu-example-programs>ICU example programs</a>
+<ul>
+<li><a href=#generating-random-codepoints>Generating random codepoints</a></li>
+<li><a href=#manipulating-codepoints>Manipulating codepoints</a></li>
+<li><a href=#examining-utf-8-code-units>Examining UTF-8 code units</a></li>
+<li><a href=#reading-lines-into-internal-utf-16-representation>Reading lines as UTF-16</a></li>
+<li><a href=#extracting-iterating-codepoints-in-utf-16-string>Extracting, iterating codepoints</a></li>
+<li><a href=#transformation>Transformation</a></li>
+<li><a href=#punycode>Punycode</a></li>
+<li><a href=#changing-case>Changing case</a></li>
+<li><a href=#counting-words-and-graphemes>Counting words and graphemes</a></li>
+<li><a href=#string-search>String search</a></li>
+<li><a href=#comparing-strings-modulo-normalization>Strings modulo normalization</a></li>
+<li><a href=#confusable-strings>Confusable strings</a></li>
+</ul></li>
+<li><a href=#further-reading>Further reading</a></li>
+</ul>
+<h2 id=concepts>Concepts</h2>
+<p>Before getting into the example code, it’s important to learn the terminology. Let’s start at the most basic question.</p>
+<h3 id=what-is-a-character>What is a “character?”</h3>
+<p>“Character” is an overloaded term. What a native speaker of a language identifies as a letter or symbol is often stored as multiple values in the internal Unicode representation. The representation is further obscured by an additional encoding in memory, on disk, or during network transmission.</p>
+<p>Let’s start at the abstraction closest to the user: the grapheme cluster. A “grapheme” is a graphical unit that a reader recognizes as a single element of the writing system. It’s the character as a user would understand it. For example, 山, ä and క్క are graphemes. Pieces of a single grapheme always stay together in print; breaking them apart is either nonsense or changes the meaning of the symbol. They are rendered as “glyphs,” i.e.&nbsp;markings on paper or screen which vary by font, style, or position in a word.</p>
+<p>You might imagine that Unicode assigns each grapheme a unique number, but that is not true. It would be wasteful because there is a combinatorial explosion between letters and diacritical marks. For instance (o, ô, ọ, ộ) and (a, â, ạ, ậ) follow a pattern. Rather than assigning a distinct number to each, it’s more efficient to assign a number to o and a, and then to each of the combining marks. The graphemes can be built from letters and combining marks e.g.&nbsp;ậ = a + ◌̂ + ◌̣.</p>
+<p>In reality Unicode takes both approaches. It assigns numbers to basic letters and combining marks, but also to some of their more common combinations. Many graphemes can thus be created in more than one way. For instance ộ can be specified in five ways:</p>
+<ul>
+<li>A: U+006f (o) + U+0302 (◌̂) + U+0323 (◌̣)</li>
+<li>B: U+006f (o) + U+0323 (◌̣) + U+0302 (◌̂)</li>
+<li>C: U+00f4 (ô) + U+0323 (◌̣)</li>
+<li>D: U+1ecd (ọ) + U+0302 (◌̂)</li>
+<li>E: U+1ed9 (ộ)</li>
+</ul>
+<p>The numbers (written U+xxxx) for each abstract character and each combining symbol are called “codepoints.” Every Unicode string is expressed as a list of codepoints. As illustrated above, multiple strings of codepoints may render into the same sequence of graphemes.</p>
+<p>To meaningfully compare strings codepoint by codepoint for equality, both strings should both be represented in a consistent way. A standardized choice of codepoint decomposition for graphemes is called a “normal form.”</p>
+<p>One choice is to decompose a string into as many codepoints as possible like examples A and B (with a weighting factor of which combining marks should come first). That is called Normalization Form Canonical Decomposition (NFD). Another choice is to do the opposite and use the fewest codepoints possible like example E. This is called Normalization Form Canonical Composition (NFC).</p>
+<p>A core concept to remember is that, although codepoints are the building blocks of text, they don’t match up 1-1 with user-perceived characters (graphemes). Operations such as taking the length of an array of codepoints, or accessing arbitrary array positions are typically not useful for Unicode programs. Programs must also be mindful of the combining characters, like diacritical marks, when inserting or deleting codepoints. Inserting U+0061 into the asterisk position U+006f U+0302 (*) U+0323 changes the string “ộ” into “ôạ” rather than “ộa”.</p>
+<h3 id=glyphs-vs-graphemes>Glyphs vs graphemes</h3>
+<p>It’s not just fonts that cause graphemes to be rendered into varying glyphs. The rules of some languages cause glyphs to change through contextual shaping. For instance the Arabic letter “heh” has four forms, depending on which sides are flanked by letters. When isolated it appears as ﻩ and in the final/initial/medial position in a word it appears as ﻪ/ﻫ/ﻬ respectively. Similarly, Greek displays lower-case sigma differently at the end of the word (final form) than elsewhere. Some glyphs change based on visual order. In a right-to-left language the starting parenthesis “(” mirrors to display as “)”.</p>
+<p>Not only do individual graphemes’ glyphs vary, graphemes can combine to form single glyphs. One way is through ligatures. The latin letters “fi” often join the dot of the i with the curve of the f (presentation form U+FB01 ﬁ). Another way is language irregularity. The Arabic ا and ل, when contiguous, <em>must</em> form ﻻ.</p>
+<p>Conversely, a single grapheme can split into multiple glyphs. For instance in some Indic languages, vowels can split and surround preceding consonants. In Bengali, U+09CC ৌ surrounds U+09AE ম to become মৌ . Try placing a cursor at the end of this text box and pressing backspace: <input type=text size=3 value=মৌ></p>
+<h3 id=how-are-codepoints-encoded>How are codepoints encoded?</h3>
+<p>In 1990, Unicode codepoints were 16 bits wide. That choice turned out to be too small for the symbols and languages people wanted to represent, so the committee extended the standard to 21 bits. That’s fine in the abstract, but how the 21 bits are stored in memory or communicated between computers depends on practical factors.</p>
+<p>It’s an unusual memory size. Computer hardware doesn’t typically access memory in 21-bit chunks. Networking protocols, too, are better geared toward transmitting eight bits at a time. Thus, codepoints are broken into sequences of more conventionally sized blocks called <em>code units</em> for persistence on disk, transmission over networks, and manipulation in memory.</p>
+<p>The Unicode Transformation Formats (UTF) describe different ways to map between codepoints and code units. The transformation formats are named after the bit width of their code units (7, 8, 16, or 32), as well as the endianness (BE or LE). For instance: UTF-8, or UTF-16BE. In addition to the UTFs, there’s another – more complex – encoding called Punycode. It is designed to conform with the limited ASCII character subset used for Internet host names.</p>
+<p>A final bit of terminology. A “plane” is a continuous group of 65,536 code points. There are 17 planes, identified by the numbers 0 to 16. Plane 0 is the Basic Multilingual Plane (BMP), which contains most commonly-used characters. The higher planes (1 through 16) are called “supplementary planes.”</p>
+<h3 id=which-encoding-should-you-choose>Which encoding should you choose?</h3>
+<p>For transmission and storage, use UTF-8. Programs which move ASCII data can handle it without modification. Machine endianness does not affect UTF-8, and the byte-sized units work well in networks and filesystems.</p>
+<p>Some sites, like <a href=https://utf8everywhere.org/>UTF-8 Everywhere</a> go even further and recommend using UTF-8 for internal manipulation of text in program memory. However, I would suggest you use whatever encoding your Unicode library favors for this. You’ll be performing operations through the library API, not directly on code units. As we’re seeing, there is too much complexity between glyphs, graphemes, codepoints and code units to be manipulating the units directly. Use the encoding preferred by your library and convert to/from UTF-8 at the edges of the program.</p>
+<p>It’s unwise to use UTF-32 to store strings in memory. In this encoding it’s true that every code unit can hold a full codepoint. However, the relationship between codepoints and glyphs isn’t straightforward, so there isn’t a programmatic advantage to storing the string this way.</p>
+<p>UTF-32 also wastes at minimum 11 (32 - 21) bits per codepoint, and typically more. For instance, UTF-16 requires only one 16-bit code unit to encode points in the Base Multilingual Plane (the most commonly encountered points). Thus UTF-32 can typically double the space required for the BMP.</p>
+<p>There <em>are</em> times to manipulate UTF-32, such as when examining a single codepoint. We’ll see examples below.</p>
+<h2 id=icu-example-programs>ICU example programs</h2>
+<p>The programs in this article are ready to compile and run. They require the ICU C library called ICU4C, which is available on most platforms through the operating system package manager.</p>
+<p>ICU provides five libraries for linking (we need the first two):</p>
+<table class=table>
+<thead>
+<tr>
+<th>
+Package
+</th>
+<th>
+Contents
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+icu-uc
+</td>
+<td>
+Common (uc) and Data (dt/data) libraries
+</td>
+</tr>
+<tr>
+<td>
+icu-io
+</td>
+<td>
+Ustdio/iostream library (icuio)
+</td>
+</tr>
+<tr>
+<td>
+icu-i18n
+</td>
+<td>
+Internationalization (in/i18n) library
+</td>
+</tr>
+<tr>
+<td>
+icu-le
+</td>
+<td>
+Layout Engine
+</td>
+</tr>
+<tr>
+<td>
+icu-lx
+</td>
+<td>
+Paragraph Layout
+</td>
+</tr>
+</tbody>
+</table>
+<p>To use ICU4C, set the compiler and linker flags with <code>pkg-config</code> in your Makefile. (Pkg-config may also need to be installed on your computer.)</p>
+<div class=sourceCode><pre class="sourceCode makefile"><code class="sourceCode makefile"><span class=dt>CFLAGS  </span><span class=ch>=</span><span class=st> -std=c99 -pedantic -Wall -Wextra </span><span class=ch>\</span>
+<span class=st>          `pkg-config --cflags icu-uc icu-io`</span>
+<span class=dt>LDFLAGS </span><span class=ch>=</span><span class=st> `pkg-config --libs icu-uc icu-io`</span></code></pre></div>
+<p>The examples in this article conform to the C89 standard, but we specify C99 in the Makefile because the ICU header files use C99-style (<code>//</code>) comments.</p>
+<h3 id=generating-random-codepoints>Generating random codepoints</h3>
+<p>To start getting a feel for ICU’s I/O and codepoint manipulation, let’s make a program to output completely random (but valid) codepoints. You could use this program as a basic fuzz tester, to see whether its output confuses other programs. A real fuzz tester ought to have the ability to take an explicit seed for repeatable output, but we will omit that functionality from our simple demo.</p>
+<p>This program has limited portability because it gets entropy from <code>/dev/urandom</code>, a Unix device. To generate good random numbers using only the C standard library, see my other <a href=https://begriffs.com/posts/2019-01-19-inside-c-standard-lib.html#stdlib.h-random-numbers>article</a>. Also <a href=http://pubs.opengroup.org/onlinepubs/9699919799/functions/random.html>POSIX</a> provides pseudo-random number functions.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/* for constants like EXIT_FAILURE */</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=co>/* we'll be using standard C I/O to read random bytes */</span>
+<span class=pp>#include </span><span class=im>&lt;stdio.h&gt;</span>
+
+<span class=co>/* to determine codepoint categories */</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/uchar.h&gt;</span>
+<span class=co>/* to output UTF-32 codepoints in proper encoding for terminal */</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	<span class=dt>long</span> i = <span class=dv>0</span>, linelen;
+	<span class=co>/* somewhat non-portable: /dev/urandom is unix specific */</span>
+	FILE *f = fopen(<span class=st>"/dev/urandom"</span>, <span class=st>"rb"</span>);
+	UFILE *out;
+	<span class=co>/* UTF-32 code unit can hold an entire codepoint */</span>
+	UChar32 c;
+	<span class=co>/* to learn about c */</span>
+	UCharCategory cat;
+
+	<span class=cf>if</span> (!f)
+	{
+		fputs(<span class=st>"Unable to open /dev/urandom</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* optional length to insert line breaks */</span>
+	linelen = argc &gt; <span class=dv>1</span> ? strtol(argv[<span class=dv>1</span>], NULL, <span class=dv>10</span>) : <span class=dv>0</span>;
+
+	<span class=co>/* have to obtain a Unicode-aware file handle. This function</span>
+<span class=co>	 * has no failure return code, it always works. */</span>
+	out = u_get_stdout();
+
+	<span class=co>/* read a random 32 bits, presumably forever */</span>
+	<span class=cf>while</span> (fread(&amp;c, <span class=kw>sizeof</span> c, <span class=dv>1</span>, f))
+	{
+		<span class=co>/* Scale 32-bit value to a number within code planes</span>
+<span class=co>		 * zero through fourteen. (Planes 15-16 are private-use)</span>
+<span class=co>		 *</span>
+<span class=co>		 * The modulo bias is insignificant. The first 65535</span>
+<span class=co>		 * codepoints are minutely favored, being generated by</span>
+<span class=co>		 * 4370 different 32-bit numbers each. The remaining</span>
+<span class=co>		 * 917505 codepoints are generated by 4369 numbers each.</span>
+<span class=co>		 */</span>
+		c %= <span class=bn>0xF0000</span>;
+		cat = u_charType(c);
+
+		<span class=co>/* U_UNASSIGNED are "non-characters" with no assigned</span>
+<span class=co>		 * meanings for interchange. U_PRIVATE_USE_CHAR are</span>
+<span class=co>		 * reserved for use within organizations, and</span>
+<span class=co>		 * U_SURROGATE are designed for UTF-16 code units in</span>
+<span class=co>		 * particular. Don't print any of those. */</span>
+		<span class=cf>if</span> (cat != U_UNASSIGNED &amp;&amp; cat != U_PRIVATE_USE_CHAR &amp;&amp;
+		    cat != U_SURROGATE)
+		{
+			u_fputc(c, out);
+			<span class=cf>if</span> (linelen &amp;&amp; ++i &gt;= linelen)
+			{
+				i = <span class=dv>0</span>;
+				<span class=co>/* there are a number of Unicode</span>
+<span class=co>				 * linebreaks, but the standard ASCII</span>
+<span class=co>				 * \n is valid, and will interact well</span>
+<span class=co>				 * with a shell */</span>
+				u_fputc(<span class=ch>'\n'</span>, out);
+			}
+		}
+	}
+
+	<span class=co>/* should never get here */</span>
+	fclose(f);
+	<span class=cf>return</span> EXIT_SUCCESS;
+}</code></pre></div>
+<p>A note about the mysterious U_UNASSIGNED category, the “non-characters.” These are code points that are permanently reserved in the Unicode Standard for internal use. They are not recommended for use in open interchange of Unicode text data. The Unicode Standard sets aside 66 non-character code points. The last two code points of each plane are noncharacters (U+FFFE and U+FFFF on the BMP). In addition, there is a contiguous range of another 32 noncharacter code points in the BMP: U+FDD0…U+FDEF.</p>
+<p>Applications are free to use any of these noncharacter code points internally. They have no standard interpretation when exchanged outside the context of internal use. They are not illegal in interchange, nor does their presence cause Unicode text to be ill-formed.</p>
+<h3 id=manipulating-codepoints>Manipulating codepoints</h3>
+<p>We discussed non-characters in the previous section, but there are also Private Use codepoints. Unlike non-characters, those for private use <em>are</em> designated for interchange between systems. However the precise meaning and glyphs for these characters is specific to the organization using them. The same codepoints can be used for different things by different people.</p>
+<p>Unicode provides a large area for private use. Both a small code block in the BMP, as well as two entire planes: 15 and 16. Because no browser or text editor will render PUA codepoints beyond (typically) empty boxes, we can exploit plane 15 to make a visually confusing code. Ultimately it’s a cheesy transposition cypher, but it’s kind of fun.</p>
+<p>Below is a program to shift characters in the BMP to/from plane 15, the Private Use Area A. Example output of an encoded string: 󰁂󰁥󰀠󰁳󰁵󰁲󰁥󰀠󰁴󰁯󰀠󰁤󰁲󰁩󰁮󰁫󰀠󰁹󰁯󰁵󰁲󰀠󰁏󰁶󰁡󰁬󰁴󰁩󰁮󰁥󰀡󰀊</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=pp>#include </span><span class=im>&lt;stdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=co>/* for strcmp in argument parsing */</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+
+<span class=dt>void</span> usage(<span class=dt>const</span> <span class=dt>char</span> *prog)
+{
+	puts(<span class=st>"Shift base multilingual plane to/from PUA-A</span><span class=sc>\n</span><span class=st>"</span>);
+	printf(<span class=st>"Usage: %s [-d]</span><span class=sc>\n\n</span><span class=st>"</span>, prog);
+	puts(<span class=st>"Encodes stdin (or decode with -d)"</span>);
+	exit(EXIT_SUCCESS);
+}
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UChar32 c;
+	UFILE *in, *out;
+	<span class=kw>enum</span> { MODE_ENCODE, MODE_DECODE } mode = MODE_ENCODE;
+
+	<span class=cf>if</span> (argc &gt; <span class=dv>2</span>)
+		usage(argv[<span class=dv>0</span>]);
+	<span class=cf>else</span> <span class=cf>if</span>(argc &gt; <span class=dv>1</span>)
+	{
+		<span class=cf>if</span> (strcmp(argv[<span class=dv>1</span>], <span class=st>"-d"</span>) == <span class=dv>0</span>)
+			mode = MODE_DECODE;
+		<span class=cf>else</span>
+			usage(argv[<span class=dv>0</span>]);
+	}
+
+	out = u_get_stdout();
+
+	in = u_finit(stdin, NULL, NULL);
+	<span class=cf>if</span> (!in)
+	{
+		fputs(<span class=st>"Error opening stdout as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* u_fgetcx returns UTF-32. U_EOF happens to be 0xFFFF,</span>
+<span class=co>	 * not -1 like EOF typically is in stdio.h */</span>
+	<span class=cf>while</span> ((c = u_fgetcx(in)) != U_EOF)
+	{
+		<span class=co>/* -1 for UChar32 actually signifies invalid character */</span>
+		<span class=cf>if</span> (c == (UChar32)<span class=bn>0xFFFFFFFF</span>)
+		{
+			fputs(<span class=st>"Invalid character.</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+			<span class=cf>continue</span>;
+		}
+		<span class=cf>if</span> (mode == MODE_ENCODE)
+		{
+			<span class=co>/* Move the BMP into the Supplementary</span>
+<span class=co>			 * Private Use Area-A, which begins</span>
+<span class=co>			 * at codepoint 0xf0000 */</span>
+			<span class=cf>if</span> (<span class=dv>0</span> &lt; c &amp;&amp; c &lt; <span class=bn>0xe000</span>)
+				c += <span class=bn>0xf0000</span>;
+		}
+		<span class=cf>else</span>
+		{
+			<span class=co>/* Move the Supplementary Private Use</span>
+<span class=co>			 * Plane down into the BMP */</span>
+			<span class=cf>if</span> (<span class=bn>0xf0000</span> &lt; c &amp;&amp; c &lt; <span class=bn>0xfe000</span>)
+				c -= <span class=bn>0xf0000</span>;
+		}
+		u_fputc(c, out);
+	}
+
+	<span class=co>/* if you u_finit it, then u_fclose it */</span>
+	u_fclose(in);
+
+	<span class=cf>return</span> EXIT_SUCCESS;
+}</code></pre></div>
+<h3 id=examining-utf-8-code-units>Examining UTF-8 code units</h3>
+<p>So far we’ve been working entirely with complete codepoints. This next example gets into their representation as code units in a transformation format, namely UTF-8. We will read the codepoint as a hexadecimal program argument, and convert it to between 1-4 bytes in UTF-8, and print the hex values of those bytes.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** utf8.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;stdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/utf8.h&gt;</span>
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UChar32 c;
+	<span class=co>/* ICU defines its own bool type to be used</span>
+<span class=co>	 * with their macro */</span>
+	UBool err = FALSE;
+	<span class=co>/* ICU uses C99 types like uint8_t */</span>
+	<span class=dt>uint8_t</span> bytes[<span class=dv>4</span>] = {<span class=dv>0</span>};
+	<span class=co>/* probably should be size_t not int32_t, but</span>
+<span class=co>	 * just matching what their macro expects */</span>
+	<span class=dt>int32_t</span> written = <span class=dv>0</span>, i;
+	<span class=dt>char</span> *parsed;
+
+	<span class=cf>if</span> (argc != <span class=dv>2</span>)
+	{
+		fprintf(stderr, <span class=st>"Usage: %s codepoint</span><span class=sc>\n</span><span class=st>"</span>, *argv);
+		exit(EXIT_FAILURE);
+	}
+	c = strtol(argv[<span class=dv>1</span>], &amp;parsed, <span class=dv>16</span>);
+	<span class=cf>if</span> (!*argv[<span class=dv>1</span>] || *parsed)
+	{
+		fprintf(stderr,
+			<span class=st>"Cannot parse codepoint: U+%s</span><span class=sc>\n</span><span class=st>"</span>, argv[<span class=dv>1</span>]);
+		exit(EXIT_FAILURE);
+	}
+
+	<span class=co>/* this is a macro, and updates the variables</span>
+<span class=co>	 * directly. No need to pass addresses.</span>
+<span class=co>	 * We're saying: write to "bytes", tell us how</span>
+<span class=co>	 * many were "written", limit it to four */</span>
+	U8_APPEND(bytes, written, <span class=dv>4</span>, c, err);
+	<span class=cf>if</span> (err == TRUE)
+	{
+		fprintf(stderr, <span class=st>"Invalid codepoint: U+%s</span><span class=sc>\n</span><span class=st>"</span>, argv[<span class=dv>1</span>]);
+		exit(EXIT_FAILURE);
+	}
+
+	<span class=co>/* print in format 'xxd -r' can read */</span>
+	printf(<span class=st>"0: "</span>);
+	<span class=cf>for</span> (i = <span class=dv>0</span>; i &lt; written; ++i)
+		printf(<span class=st>"%2x"</span>, bytes[i]);
+	puts(<span class=st>""</span>);
+	<span class=cf>return</span> EXIT_SUCCESS;
+}</code></pre></div>
+<p>Suppose you compile this to a program named <code>utf8</code>. Here are some examples:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash"><span class=co># ascii characters are unchanged</span>
+$ <span class=ex>./utf8</span> 61
+<span class=ex>0</span>: 61
+
+<span class=co># other codepoints require more bytes</span>
+$ <span class=ex>./utf8</span> 1F41A
+<span class=ex>0</span>: f09f909a
+
+<span class=co># format is compatible with "xxd"</span>
+$ <span class=ex>./utf8</span> 1F41A <span class=kw>|</span> <span class=ex>xxd</span> -r
+🐚
+
+<span class=co># surrogates (used in UTF-16) are not valid codepoints</span>
+$ <span class=ex>./utf8</span> DC00
+<span class=ex>Invalid</span> codepoint: U+DC00</code></pre></div>
+<h3 id=reading-lines-into-internal-utf-16-representation>Reading lines into internal UTF-16 representation</h3>
+<h4 id=unlimited-line-length>Unlimited line length</h4>
+<p>Here’s a useful helper function named <code>u_wholeline()</code> which reads a line of any length into a dynamically allocated buffer. It reads as UChar*, which is ICU’s standard UTF-16 code unit array.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/* to properly test realloc */</span>
+<span class=pp>#include </span><span class=im>&lt;errno.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+
+<span class=co>/* line Feed, vertical tab, form feed, carriage return,</span>
+<span class=co> * next line, line separator, paragraph separator */</span>
+<span class=pp>#define NEWLINE(c) ( \</span>
+<span class=pp>	((c) &gt;= 0xa &amp;&amp; (c) &lt;= 0xd) || \</span>
+<span class=pp>	(c) == 0x85 || (c) == 0x2028 || (c) == 0x2029 )</span>
+
+<span class=co>/* allocates buffer, caller must free */</span>
+UChar *u_wholeline(UFILE *f)
+{
+	<span class=co>/* assume most lines are shorter</span>
+<span class=co>	 * than 128 UTF-16 code units */</span>
+	<span class=dt>size_t</span> i, sz = <span class=dv>128</span>;
+	UChar c, *s = malloc(sz * <span class=kw>sizeof</span>(*s)), *s_new;
+
+	<span class=cf>if</span> (!s)
+		<span class=cf>return</span> NULL;
+
+	<span class=co>/* u_fgetc returns UTF-16, unlike u_fgetcx */</span>
+	<span class=cf>for</span> (i = <span class=dv>0</span>; (s[i] = u_fgetc(f)) != U_EOF &amp;&amp; !NEWLINE(s[i]); ++i)
+		<span class=cf>if</span> (i &gt;= sz)
+		{
+			<span class=co>/* double the buffer when it runs out */</span>
+			sz *= <span class=dv>2</span>;
+			errno = <span class=dv>0</span>;
+			s_new = realloc(s, sz * <span class=kw>sizeof</span>(*s));
+			<span class=cf>if</span> (errno == ENOMEM)
+				free(s);
+			<span class=cf>if</span> ((s = s_new) == NULL)
+				<span class=cf>return</span> NULL;
+		}
+
+	<span class=co>/* if terminated by CR, eat LF */</span>
+	<span class=cf>if</span> (s[i] == <span class=bn>0xd</span> &amp;&amp; (c = u_fgetc(f)) != <span class=bn>0xa</span>)
+		u_fungetc(c, f);
+	<span class=co>/* s[i] will either be U_EOF or a newline; wipe it */</span>
+	s[i] = '\<span class=dv>0</span>';
+
+	<span class=cf>return</span> s;
+}</code></pre></div>
+<h4 id=limited-line-length>Limited line length</h4>
+<p>The previous example reads an entire line. However, reading a limited number of code units from UTF-16 lines is more tricky. Truncating a Unicode string is always a little dangerous due to possibly splitting a word and breaking contextual shaping.</p>
+<p>UTF-16 also has surrogate pairs, which are how that translation format expresses codepoints outside the BMP. Ending a UTF-16 string early can split surrogate pairs without the proper precaution.</p>
+<p>The following example reads lines in chunks of at most three UTF-16 code units at a time. If it reads two consecutive codepoints from supplementary planes it will fail. The program accepts a “fix” argument to make it push a final unpaired surrogate back onto the stream for a future read.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** codeunit.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustring.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/utf16.h&gt;</span>
+
+<span class=co>/* BUFSZ set to be very small so that lines must be read in</span>
+<span class=co> * many chunks. Helps illustrate split surrogate pairs */</span>
+<span class=pp>#define BUFSZ 4</span>
+
+<span class=dt>void</span> printHex(<span class=dt>const</span> UChar *s)
+{
+	<span class=cf>while</span> (*s)
+		printf(<span class=st>"%x "</span>, *s++);
+	putchar(<span class=ch>'\n'</span>);
+}
+
+<span class=co>/* yeah, slightly annoying duplication */</span>
+<span class=dt>void</span> printHex32(<span class=dt>const</span> UChar32 *s)
+{
+	<span class=cf>while</span> (*s)
+		printf(<span class=st>"%x "</span>, *s++);
+	putchar(<span class=ch>'\n'</span>);
+}
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UFILE *in;
+	<span class=co>/* read line into ICU's default UTF-16 representation */</span>
+	UChar line[BUFSZ];
+	<span class=co>/* A buffer to hold codepoints of "line" as UTF-32 code</span>
+<span class=co>	 * units.  The length is sufficient because it requires</span>
+<span class=co>	 * fewer (or at least no greater) code units in UTF-32 to</span>
+<span class=co>	 * encode the string */</span>
+	UChar32 codepoints[BUFSZ];
+	UChar *final;
+	UErrorCode err = U_ZERO_ERROR;
+
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* read lines one small BUFSZ chunk at a time */</span>
+	<span class=cf>while</span> (u_fgets(line, BUFSZ, in))
+	{
+		<span class=co>/* correct for split surrogate pairs only</span>
+<span class=co>		 * if the "fix" argument is present */</span>
+		<span class=cf>if</span> (argc &gt; <span class=dv>1</span> &amp;&amp; strcmp(argv[<span class=dv>1</span>], <span class=st>"fix"</span>) == <span class=dv>0</span>)
+		{
+			final = line + u_strlen(line);
+			<span class=co>/* want to consider the character before \0</span>
+<span class=co>			 * if such exists */</span>
+			<span class=cf>if</span> (final &gt; line)
+				final--;
+			<span class=co>/* if it is the lead unit of a surrogate pair */</span>
+			<span class=cf>if</span> (U16_IS_LEAD(*final))
+			{
+				<span class=co>/* push it back for a future read, and</span>
+<span class=co>				 * truncate the string */</span>
+				u_fungetc(*final, in);
+				*final = '\<span class=dv>0</span>';
+			}
+		}
+
+		printf(<span class=st>"UTF-16    : "</span>);
+		printHex(line);
+		u_strToUTF32(
+			codepoints, BUFSZ, NULL,
+			line, -<span class=dv>1</span>, &amp;err);
+		printf(<span class=st>"Error?    : %s</span><span class=sc>\n</span><span class=st>"</span>, u_errorName(err));
+		printf(<span class=st>"Codepoints: "</span>);
+		printHex32(codepoints);
+
+		<span class=co>/* reset potential errors and go for another chunk */</span>
+		err = U_ZERO_ERROR;
+		*codepoints = '\<span class=dv>0</span>';
+	}
+
+	u_fclose(in);
+	<span class=cf>return</span> EXIT_SUCCESS;
+}</code></pre></div>
+<p>If the program reads two weird numerals 𝟘𝟙 (different from 01), neither of which are in the BMP, it finds one codepoint but chokes on the broken pair:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> -n 𝟘𝟙 <span class=kw>|</span> <span class=ex>./codeunit</span>
+<span class=ex>UTF-16</span>    : d835 dfd8 d835
+<span class=ex>Error?</span>    : U_INVALID_CHAR_FOUND
+<span class=ex>Codepoints</span>: 1d7d8
+<span class=ex>UTF-16</span>    : dfd9
+<span class=ex>Error?</span>    : U_INVALID_CHAR_FOUND
+<span class=ex>Codepoints</span>:</code></pre></div>
+<p>However if we pass the “fix” argument, the program will read two complete codepoints:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> -n 𝟘𝟙 <span class=kw>|</span> <span class=ex>./codeunit</span> fix
+<span class=ex>UTF-16</span>    : d835 dfd8
+<span class=ex>Error?</span>    : U_ZERO_ERROR
+<span class=ex>Codepoints</span>: 1d7d8
+<span class=ex>UTF-16</span>    : d835 dfd9
+<span class=ex>Error?</span>    : U_ZERO_ERROR
+<span class=ex>Codepoints</span>: 1d7d9</code></pre></div>
+<p>Perhaps a better way to read a line with limited length is to use a “break iterator” to stop on a word boundary. We’ll see more about that later.</p>
+<h3 id=extracting-iterating-codepoints-in-utf-16-string>Extracting, iterating codepoints in UTF-16 string</h3>
+<p>Our next example will rather laboriously remove diacritical marks from a string. There’s an easier way to do this called “transformation,” but doing it manually provides an opportunity to decompose characters and iterate over them with the <code>U16_NEXT</code> macro.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** nomarks.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/uchar.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/unorm2.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/utf16.h&gt;</span>
+
+<span class=co>/* Limit to how many decomposed UTF-16 units a single</span>
+<span class=co> * codepoint will become in NFD. I don't know the</span>
+<span class=co> * correct value here so I chose a value that seems</span>
+<span class=co> * to be overkill */</span>
+<span class=pp>#define MAX_DECOMP_LEN 16</span>
+
+<span class=dt>int</span> main(<span class=dt>void</span>)
+{
+	<span class=dt>long</span> i, n;
+	UChar32 c;
+	UFILE *in, *out;
+	UChar decomp[MAX_DECOMP_LEN];
+	UErrorCode status = U_ZERO_ERROR;
+	UNormalizer2 *norm;
+
+	out = u_get_stdout();
+
+	in = u_finit(stdin, NULL, NULL);
+	<span class=cf>if</span> (!in)
+	{
+		<span class=co>/* using stdio functions with stderr and ustdio</span>
+<span class=co>		 * with stdout. Mixing the two on a single file</span>
+<span class=co>		 * handle would probably be bad. */</span>
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* create a normalizer, in this case one going to NFD */</span>
+	norm = (UNormalizer2 *)unorm2_getNFDInstance(&amp;status);
+	<span class=cf>if</span> (U_FAILURE(status)) {
+		fprintf(stderr,
+			<span class=st>"unorm2_getNFDInstance(): %s</span><span class=sc>\n</span><span class=st>"</span>,
+			u_errorName(status));
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* consume input as UTF-32 units one by one */</span>
+	<span class=cf>while</span> ((c = u_fgetcx(in)) != U_EOF)
+	{
+		<span class=co>/* Decompose c to isolate its n combining character</span>
+<span class=co>		 * codepoints. Saves them as UTF-16 code units.  FYI,</span>
+<span class=co>		 * this function ignores the type of "norm" and always</span>
+<span class=co>		 * denormalizes */</span>
+		n = unorm2_getDecomposition(
+			norm, c, decomp, MAX_DECOMP_LEN, &amp;status
+		);
+
+		<span class=cf>if</span> (U_FAILURE(status)) {
+			fprintf(stderr,
+				<span class=st>"unorm2_getDecomposition(): %s</span><span class=sc>\n</span><span class=st>"</span>,
+				u_errorName(status));
+			u_fclose(in);
+			<span class=cf>return</span> EXIT_FAILURE;
+		}
+
+		<span class=co>/* if c does not decompose and is not itself</span>
+<span class=co>		 * a diacritical mark */</span>
+		<span class=cf>if</span> (n &lt; <span class=dv>0</span> &amp;&amp; ublock_getCode(c) !=
+		    UBLOCK_COMBINING_DIACRITICAL_MARKS)
+			u_fputc(c, out);
+
+		<span class=co>/* walk canonical decomposition, reuse c variable */</span>
+		<span class=cf>for</span> (i = <span class=dv>0</span>; i &lt; n; )
+		{
+			<span class=co>/* the U16_NEXT macro iterates over UChar (aka</span>
+<span class=co>			 * UTF-16, advancing by one or two elements as</span>
+<span class=co>			 * needed to get a codepoint. It saves the result</span>
+<span class=co>			 * in UTF-32. The macro updates i and c. */</span>
+			U16_NEXT(decomp, i, n, c);
+			<span class=co>/* output only if not combining diacritical */</span>
+			<span class=cf>if</span> (ublock_getCode(c) !=
+			    UBLOCK_COMBINING_DIACRITICAL_MARKS)
+				u_fputc(c, out);
+		}
+	}
+
+	u_fclose(in);
+	<span class=co>/* u_get_stdout() doesn't need to be u_fclose'd */</span>
+	<span class=cf>return</span> EXIT_SUCCESS;
+}</code></pre></div>
+<p>Here’s an example of running the program:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> <span class=st>"résumé façade"</span> <span class=kw>|</span> <span class=ex>./nomarks</span>
+<span class=ex>resume</span> facade</code></pre></div>
+<h3 id=transformation>Transformation</h3>
+<p>ICU provides a rich domain specific language for <a href=http://userguide.icu-project.org/transforms/general>transforming strings</a>. For example, our entire program in the previous section can be replaced by the transformation <code>NFD; [:Nonspacing Mark:] Remove; NFC</code>. This means to perform a canonical decomposition, remove nonspacing marks, and then canonically compose again. (In fact our program above didn’t re-compose.)</p>
+<p>The program below echoes stdin to stdout, but passes the output through a transformation.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** trans-stream.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustring.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/utrans.h&gt;</span>
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UChar32 c;
+	UParseError pe;
+	UFILE *in, *out;
+	UTransliterator *t;
+	UErrorCode status = U_ZERO_ERROR;
+	UChar *xform_id;
+	<span class=dt>size_t</span> n;
+
+	<span class=cf>if</span> (argc != <span class=dv>2</span>)
+	{
+		fprintf(stderr,
+			<span class=st>"Usage: %s </span><span class=sc>\"</span><span class=st>translation rules</span><span class=sc>\"\n</span><span class=st>"</span>, argv[<span class=dv>0</span>]);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* the UTF-16 string should never be longer than the UTF-8</span>
+<span class=co>	 * argv[1], so this should be safe */</span>
+	n = strlen(argv[<span class=dv>1</span>]) + <span class=dv>1</span>;
+	xform_id = malloc(n * <span class=kw>sizeof</span>(UChar));
+	u_strFromUTF8(xform_id, n, NULL, argv[<span class=dv>1</span>], -<span class=dv>1</span>, &amp;status);
+
+	<span class=co>/* create transliterator by identifier */</span>
+	t = utrans_openU(xform_id, -<span class=dv>1</span>, UTRANS_FORWARD,
+	                 NULL, -<span class=dv>1</span>, &amp;pe, &amp;status);
+	<span class=co>/* don't need the identifier any more */</span>
+	free(xform_id);
+	<span class=cf>if</span> (U_FAILURE(status)) {
+		fprintf(stderr, <span class=st>"utrans_open(%s): %s</span><span class=sc>\n</span><span class=st>"</span>,
+		        argv[<span class=dv>1</span>], u_errorName(status));
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	out = u_get_stdout();
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* transparently transliterate stdout */</span>
+	u_fsettransliterator(out, U_WRITE, t, &amp;status);
+	<span class=cf>if</span> (U_FAILURE(status)) {
+		fprintf(stderr,
+		        <span class=st>"Failed to set transliterator on stdout: %s</span><span class=sc>\n</span><span class=st>"</span>,
+		        u_errorName(status));
+		u_fclose(in);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* what looks like a simple echo loop actually</span>
+<span class=co>	 * transliterate characters */</span>
+	<span class=cf>while</span> ((c = u_fgetcx(in)) != U_EOF)
+		u_fputc(c, out);
+
+	utrans_close(t);
+	u_fclose(in);
+}</code></pre></div>
+<p>As mentioned, it can emulate our earlier “nomarks” program:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> <span class=st>"résumé façade"</span> <span class=kw>|</span> <span class=ex>./trans</span> <span class=st>"NFD; [:Nonspacing Mark:] Remove; NFC"</span>
+<span class=ex>resume</span> facade</code></pre></div>
+<p>It can also transliterate between scripts like this:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> <span class=st>"miirekkaḍiki veḷutunnaaru?"</span> <span class=kw>|</span> <span class=ex>./trans</span> <span class=st>"Telugu"</span>
+మీరెక్కడికి వెళుతున్నఅరు<span class=ex>?</span></code></pre></div>
+<p>Applying the transformation to a stream with <code>u_fsettransliterator</code> is a simple way to do things. However I did discover and file an ICU <a href=https://unicode-org.atlassian.net/browse/ICU-20486>bug</a> which will be fixed in version 65.1.</p>
+<p>A more robust way to apply transformations is by manipulating UChar strings directly. The technique is also probably more applicable in real applications.</p>
+<p>Here’s a rewrite of trans-stream that operates on strings directly:</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** trans-string.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustring.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/utrans.h&gt;</span>
+
+<span class=co>/* max number of UTF-16 code units to accumulate while looking</span>
+<span class=co> * for an unambiguous transliteration. Has to be fairly long to</span>
+<span class=co> * handle names in Name-Any transliteration like</span>
+<span class=co> * \N{LATIN CAPITAL LETTER O WITH OGONEK AND MACRON} */</span>
+<span class=pp>#define CONTEXT 100</span>
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UErrorCode status = U_ZERO_ERROR;
+	UChar c, *end;
+	UChar input[CONTEXT] = {<span class=dv>0</span>}, *buf, *enlarged;
+	UFILE *in, *out; 
+	UTransPosition pos;
+	<span class=dt>int32_t</span> width, sizeNeeded, bufLen;
+
+	<span class=dt>size_t</span> n;
+	UChar *xform_id;
+	UTransliterator *t;
+
+	<span class=co>/* bufLen must be able to hold at least CONTEXT, and</span>
+<span class=co>	 * will be increased as needed for transliteration */</span>
+	bufLen = CONTEXT;
+	buf = malloc(<span class=kw>sizeof</span>(UChar) * bufLen);
+
+	<span class=cf>if</span> (argc != <span class=dv>2</span>)
+	{
+		fprintf(stderr,
+			<span class=st>"Usage: %s </span><span class=sc>\"</span><span class=st>translation rules</span><span class=sc>\"\n</span><span class=st>"</span>, argv[<span class=dv>0</span>]);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* allocate and read identifier, like earlier example */</span>
+	n = strlen(argv[<span class=dv>1</span>]) + <span class=dv>1</span>;
+	xform_id = malloc(n * <span class=kw>sizeof</span>(UChar));
+	u_strFromUTF8(xform_id, n, NULL, argv[<span class=dv>1</span>], -<span class=dv>1</span>, &amp;status);
+
+	t = utrans_openU(xform_id, -<span class=dv>1</span>, UTRANS_FORWARD,
+	                 NULL, -<span class=dv>1</span>, NULL, &amp;status);
+	free(xform_id);
+	<span class=cf>if</span> (U_FAILURE(status)) {
+		fprintf(stderr, <span class=st>"utrans_open(%s): %s</span><span class=sc>\n</span><span class=st>"</span>,
+		        argv[<span class=dv>1</span>], u_errorName(status));
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	out = u_get_stdout();
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	end = input;
+	<span class=co>/* append UTF-16 code units one at a time for incremental</span>
+<span class=co>	 * transliteration */</span>
+	<span class=cf>while</span> ((c = u_fgetc(in)) != U_EOF)
+	{
+		<span class=co>/* we consider at most CONTEXT consecutive code units</span>
+<span class=co>		 * for transliteration (minus one for \0) */</span>
+		<span class=cf>if</span> (end - input &gt;= CONTEXT-<span class=dv>1</span>)
+		{
+			fprintf(stderr,
+				<span class=st>"Exceeded max (%i) code units "</span>
+				<span class=st>"for context.</span><span class=sc>\n</span><span class=st>"</span>,
+				CONTEXT);
+			<span class=cf>break</span>;
+		}
+		*end++ = c;
+		*end = '\<span class=dv>0</span>';
+
+		<span class=co>/* copy string so far to buf to operate on */</span>
+		u_strcpy(buf, input);
+		pos.start = pos.contextStart = <span class=dv>0</span>;
+		pos.limit = pos.contextLimit = end - input;
+		sizeNeeded = -<span class=dv>1</span>;
+		utrans_transIncrementalUChars(
+			t, buf, &amp;sizeNeeded, bufLen, &amp;pos, &amp;status
+		);
+		<span class=co>/* if buf not big enough for transliterated result */</span>
+		<span class=cf>if</span> (status == U_BUFFER_OVERFLOW_ERROR)
+		{
+			<span class=co>/* utrans_transIncrementalUChars sets sizeNeeded,</span>
+<span class=co>			 * so resize the buffer */</span>
+			<span class=cf>if</span> ((enlarged =
+			     realloc(buf, <span class=kw>sizeof</span>(UChar)*sizeNeeded))
+			    == NULL)
+			{
+				fprintf(stderr,
+					<span class=st>"Unable to grow buffer.</span><span class=sc>\n</span><span class=st>"</span>);
+				<span class=co>/* fail gracefully and display</span>
+<span class=co>				 * what we can */</span>
+				<span class=cf>break</span>;
+			}
+			buf = enlarged;
+			bufLen = sizeNeeded;
+			u_strcpy(buf, input);
+			pos.start = pos.contextStart = <span class=dv>0</span>;
+			pos.limit = pos.contextLimit = end - input;
+			sizeNeeded = -<span class=dv>1</span>;
+
+			<span class=co>/* one more time, but with sufficient space */</span>
+			status = U_ZERO_ERROR;
+			utrans_transIncrementalUChars(
+				t, buf, &amp;sizeNeeded, bufLen,
+				&amp;pos, &amp;status
+			);
+		}
+		<span class=co>/* handle errors other than U_BUFFER_OVERFLOW_ERROR */</span>
+		<span class=cf>if</span> (U_FAILURE(status)) {
+			fprintf(stderr,
+				<span class=st>"utrans_transIncrementalUChars(): %s</span><span class=sc>\n</span><span class=st>"</span>,
+				u_errorName(status));
+			<span class=cf>break</span>;
+		}
+
+		<span class=co>/* print buf[0 .. pos.start - 1] */</span>
+		u_printf(<span class=st>"%.*S"</span>, pos.start, buf);
+
+		<span class=co>/* Remove the code units which were processed,</span>
+<span class=co>		 * shifting back the remaining ones which could</span>
+<span class=co>		 * not be unambiguously transliterated. Then hit</span>
+<span class=co>		 * the loop to get another code unit and try again. */</span>
+		u_strcpy(input, buf+pos.start);
+		end = input + (pos.limit - pos.start);
+	}
+
+	<span class=co>/* if any leftovers from incremental transliteration */</span>
+	<span class=cf>if</span> (end &gt; input)
+	{
+		<span class=co>/* transliterate input array in place, do our best */</span>
+		width = end - input;
+		utrans_transUChars(
+			t, input, NULL, CONTEXT, <span class=dv>0</span>, &amp;width, &amp;status);
+		u_printf(<span class=st>"%S"</span>, input);
+	}
+
+	utrans_close(t);
+	u_fclose(in);
+	free(buf);
+	<span class=cf>return</span> U_SUCCESS(status) ? EXIT_SUCCESS : EXIT_FAILURE;
+}</code></pre></div>
+<h3 id=punycode>Punycode</h3>
+<p>Punycode is a representation of Unicode within the limited ASCII character subset used for internet host names. If you enter a non-ASCII URL into a web browser navigation bar, the browser translates to Punycode before making the actual DNS lookup.</p>
+<p>The encoding is part of the more general process of Internationalizing Domain Names in Applications (IDNA), which also normalizes the string.</p>
+<p>Note that not all Unicode strings can be successfully encoded. For instance codepoints like “⒈” include a period in the glyph and are used for numbered lists. Converting that dot to the ASCII hostname would inadvertently specify a subdomain. ICU turns the offending character into U+FFFD (the “replacement character”) in the output and returns an error.</p>
+<p>The following program uses <code>uidna_nameToASCII</code> or <code>uidna_nameToUnicode</code> as needed to translate between Unicode and punycode.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** puny.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;stdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=co>/* uidna stands for International Domain Names in </span>
+<span class=co> * Applications and contains punycode routines */</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/uidna.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustring.h&gt;</span>
+
+<span class=dt>void</span> chomp(UChar *s)
+{
+	<span class=co>/* unicode characters that split lines */</span>
+	UChar splits[] =
+		{<span class=bn>0xa</span>, <span class=bn>0xb</span>, <span class=bn>0xc</span>, <span class=bn>0xd</span>, <span class=bn>0x85</span>, <span class=bn>0x2028</span>, <span class=bn>0x2029</span>, '\<span class=dv>0</span>'};
+	<span class=cf>if</span> (s)
+		s[u_strcspn(s, splits)] = '\<span class=dv>0</span>';
+}
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UFILE *in;
+	UChar input[<span class=dv>1024</span>], output[<span class=dv>1024</span>];
+	UIDNAInfo info = UIDNA_INFO_INITIALIZER;
+	UErrorCode status = U_ZERO_ERROR;
+	UIDNA *idna = uidna_openUTS46(UIDNA_DEFAULT, &amp;status);
+
+	<span class=co>/* default action is performing punycode */</span>
+	<span class=dt>int32_t</span> (*action)(
+			<span class=dt>const</span> UIDNA*, <span class=dt>const</span> UChar*, <span class=dt>int32_t</span>, UChar*, 
+			<span class=dt>int32_t</span>, UIDNAInfo*, UErrorCode*
+		) = uidna_nameToASCII;
+
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* the "decode" option reverses our action */</span>
+	<span class=cf>if</span> (argc &gt; <span class=dv>1</span> &amp;&amp; strcmp(argv[<span class=dv>1</span>], <span class=st>"decode"</span>) == <span class=dv>0</span>)
+		action = uidna_nameToUnicode;
+
+	<span class=co>/* u_fgets includes the newline, so we chomp it */</span>
+	u_fgets(input, <span class=kw>sizeof</span>(input)/<span class=kw>sizeof</span>(*input), in);
+	chomp(input);
+
+	action(idna, input, -<span class=dv>1</span>, output,
+		<span class=kw>sizeof</span>(output)/<span class=kw>sizeof</span>(*output),
+		&amp;info, &amp;status);
+
+	<span class=cf>if</span> (U_SUCCESS(status) &amp;&amp; info.errors!=<span class=dv>0</span>)
+		fputs(<span class=st>"Bad input.</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+
+	u_printf(<span class=st>"%S</span><span class=sc>\n</span><span class=st>"</span>, output);
+
+	uidna_close(idna);
+	u_fclose(in);
+	<span class=cf>return</span> <span class=dv>0</span>;
+}</code></pre></div>
+<p>Example of using the program:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> <span class=st>"façade.com"</span> <span class=kw>|</span> <span class=ex>./puny</span>
+<span class=ex>xn--faade-zra.com</span>
+
+<span class=co># not every string is allowed</span>
+
+$ <span class=bu>echo</span> <span class=st>"a⒈.com"</span> <span class=kw>|</span> <span class=ex>./puny</span>
+<span class=ex>Bad</span> input.
+<span class=ex>a</span>�.com</code></pre></div>
+<h3 id=changing-case>Changing case</h3>
+<p>The C standard library has functions like <code>toupper</code> which operate on a single character at a time. ICU has equivalents like <code>u_toupper</code>, but working on single codepoints isn’t sufficient for proper casing. Let’s examine the program and see why.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** pointcase.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/uchar.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UChar32 c;
+	UFILE *in, *out;
+	UChar32 (*op)(UChar32) = NULL;
+
+	<span class=co>/* set op to one of the casing operations</span>
+<span class=co>	 * in uchar.h */</span>
+	<span class=cf>if</span> (argc &lt; <span class=dv>2</span> || strcmp(argv[<span class=dv>1</span>], <span class=st>"upper"</span>) == <span class=dv>0</span>)
+		op = u_toupper;
+	<span class=cf>else</span> <span class=cf>if</span> (strcmp(argv[<span class=dv>1</span>], <span class=st>"lower"</span>) == <span class=dv>0</span>)
+		op = u_tolower;
+	<span class=cf>else</span> <span class=cf>if</span> (strcmp(argv[<span class=dv>1</span>], <span class=st>"title"</span>) == <span class=dv>0</span>)
+		op = u_totitle;
+	<span class=cf>else</span>
+	{
+		fprintf(stderr, <span class=st>"Unrecognized case: %s</span><span class=sc>\n</span><span class=st>"</span>, argv[<span class=dv>1</span>]);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	out = u_get_stdout();
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* operates on UTF-32 */</span>
+	<span class=cf>while</span> ((c = u_fgetcx(in)) != U_EOF)
+		u_fputc(op(c), out);
+
+	u_fclose(in);
+	<span class=cf>return</span> EXIT_SUCCESS;
+}</code></pre></div>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash"><span class=co># not quite right, ß should become SS:</span>
+
+$ <span class=bu>echo</span> <span class=st>"Die große Stille"</span> <span class=kw>|</span> <span class=ex>./pointcase</span> upper
+<span class=ex>DIE</span> GROßE STILLE
+
+<span class=co># also wrong, final sigma should be ς:</span>
+
+$ <span class=bu>echo</span> <span class=st>"ΣΊΣΥΦΟΣ"</span> <span class=kw>|</span> <span class=ex>./pointcase</span> lower
+σίσυφοσ</code></pre></div>
+<p>As you can see, some graphemes need to “expand” into a greater number, and others are position-sensitive. To do this properly, we have to operate on entire strings rather than individual characters. Here is a program to do it right:</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** strcase.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;locale.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustring.h&gt;</span>
+
+<span class=pp>#define BUFSZ 1024</span>
+
+<span class=co>/* wrapper function for u_strToTitle with signature</span>
+<span class=co> * matching the other casing functions */</span>
+<span class=dt>int32_t</span> title(UChar *dest, <span class=dt>int32_t</span> destCapacity,
+		<span class=dt>const</span> UChar *src, <span class=dt>int32_t</span> srcLength,
+		<span class=dt>const</span> <span class=dt>char</span> *locale, UErrorCode *pErrorCode)
+{
+	<span class=cf>return</span> u_strToTitle(dest, destCapacity, src,
+			srcLength, NULL, locale, pErrorCode);
+}
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	UFILE *in;
+	<span class=dt>char</span> *locale;
+	UChar line[BUFSZ], cased[BUFSZ];
+	UErrorCode status = U_ZERO_ERROR;
+	<span class=dt>int32_t</span> (*op)(
+			UChar*, <span class=dt>int32_t</span>, <span class=dt>const</span> UChar*, <span class=dt>int32_t</span>,
+			<span class=dt>const</span> <span class=dt>char</span>*, UErrorCode*
+		) = NULL;
+
+	<span class=co>/* casing is locale-dependent */</span>
+	<span class=cf>if</span> (!(locale = setlocale(LC_CTYPE, <span class=st>""</span>)))
+	{
+		fputs(<span class=st>"Cannot determine system locale</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=cf>if</span> (argc &lt; <span class=dv>2</span> || strcmp(argv[<span class=dv>1</span>], <span class=st>"upper"</span>) == <span class=dv>0</span>)
+		op = u_strToUpper;
+	<span class=cf>else</span> <span class=cf>if</span> (strcmp(argv[<span class=dv>1</span>], <span class=st>"lower"</span>) == <span class=dv>0</span>)
+		op = u_strToLower;
+	<span class=cf>else</span> <span class=cf>if</span> (strcmp(argv[<span class=dv>1</span>], <span class=st>"title"</span>) == <span class=dv>0</span>)
+		op = title;
+	<span class=cf>else</span>
+	{
+		fprintf(stderr, <span class=st>"Unrecognized case: %s</span><span class=sc>\n</span><span class=st>"</span>, argv[<span class=dv>1</span>]);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* Ideally we should change case up to the last word</span>
+<span class=co>	 * break and push the remaining characters back for</span>
+<span class=co>	 * a future read if the line was longer than BUFSZ.</span>
+<span class=co>	 * Currently, if the string is truncated, the final</span>
+<span class=co>	 * character would incorrectly be considered</span>
+<span class=co>	 * terminal, which affects casing rules in Greek. */</span>
+	<span class=cf>while</span> (u_fgets(line, BUFSZ, in))
+	{
+		op(cased, BUFSZ, line, -<span class=dv>1</span>, locale, &amp;status);
+		<span class=co>/* if casing increases string length, and goes</span>
+<span class=co>		 * beyond buffer size like the german ß -&gt; SS */</span>
+		<span class=cf>if</span> (status == U_BUFFER_OVERFLOW_ERROR)
+		{
+			<span class=co>/* Just issue a warning and read another line.</span>
+<span class=co>			 * Don't treat it as severely as other errors. */</span>
+			fputs(<span class=st>"Line too long</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+			status = U_ZERO_ERROR;
+		}
+		<span class=cf>else</span> <span class=cf>if</span> (U_FAILURE(status))
+		{
+			fputs(u_errorName(status), stderr);
+			<span class=cf>break</span>;
+		}
+		<span class=cf>else</span>
+			u_printf(<span class=st>"%S"</span>, cased);
+	}
+
+	u_fclose(in);
+	<span class=cf>return</span> U_SUCCESS(status)
+		? EXIT_SUCCESS : EXIT_FAILURE;
+}</code></pre></div>
+<p>This works better.</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> <span class=st>"Die große Stille"</span> <span class=kw>|</span> <span class=ex>./strcase</span> upper
+<span class=ex>DIE</span> GROSSE STILLE
+
+$ <span class=bu>echo</span> <span class=st>"ΣΊΣΥΦΟΣ"</span> <span class=kw>|</span> <span class=ex>./strcase</span> lower
+σίσυφος</code></pre></div>
+<h3 id=counting-words-and-graphemes>Counting words and graphemes</h3>
+<p>Let’s make a version of <code>wc</code> (the Unix word count program) that knows more about Unicode. Our version will properly count grapheme clusters and word boundaries.</p>
+<p>For example, regular wc gets confused by the ancient Ogham script. This was a series of notches scratched into fence posts, and has a space character which is nonblank.</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> <span class=st>"ᚈᚐ ᚋᚓ ᚔ ᚍᚏᚐ "</span> <span class=kw>|</span> <span class=fu>wc</span>
+       <span class=ex>1</span>       1      37</code></pre></div>
+<p>One word, you say? Puh-leaze, if your program can’t handle Medieval Irish carvings then I want nothing to do with it. Here’s one that can:</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** uwc.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;locale.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ubrk.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustring.h&gt;</span>
+
+<span class=pp>#define BUFSZ 512</span>
+
+<span class=co>/* line Feed, vertical tab, form feed, carriage return, </span>
+<span class=co> * next line, line separator, paragraph separator */</span>
+<span class=pp>#define NEWLINE(c) ( \</span>
+<span class=pp>	((c) &gt;= 0xa &amp;&amp; (c) &lt;= 0xd) || \</span>
+<span class=pp>	(c) == 0x85 || (c) == 0x2028 || (c) == 0x2029 )</span>
+
+<span class=dt>int</span> main(<span class=dt>void</span>)
+{
+	UFILE *in;
+	<span class=dt>char</span> *locale;
+	UChar line[BUFSZ];
+	UBreakIterator *brk_g, *brk_w;
+	UErrorCode status = U_ZERO_ERROR;
+	<span class=dt>long</span> ngraph = <span class=dv>0</span>, nword = <span class=dv>0</span>, nline = <span class=dv>0</span>;
+	<span class=dt>size_t</span> len;
+
+	<span class=co>/* word breaks are locale-specific, so we'll obtain</span>
+<span class=co>	 * LC_CTYPE from the environment */</span>
+	<span class=cf>if</span> (!(locale = setlocale(LC_CTYPE, <span class=st>""</span>)))
+	{
+		fputs(<span class=st>"Cannot determine system locale</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* create an iterator for graphemes */</span>
+	brk_g = ubrk_open(
+		UBRK_CHARACTER, locale, NULL, -<span class=dv>1</span>, &amp;status);
+	<span class=co>/* and another for the edges of words */</span>
+	brk_w = ubrk_open(
+		UBRK_WORD, locale, NULL, -<span class=dv>1</span>, &amp;status);
+
+	<span class=co>/* yes, this is sensitive to splitting end of line</span>
+<span class=co>	 * surrogate pairs and can be improved by our previous</span>
+<span class=co>	 * function for reading bounded lines */</span>
+	<span class=cf>while</span> (u_fgets(line, BUFSZ, in))
+	{
+		len = u_strlen(line);
+
+		ubrk_setText(brk_g, line, len, &amp;status);
+		ubrk_setText(brk_w, line, len, &amp;status);
+
+		<span class=co>/* Start at beginning of string, count breaks.</span>
+<span class=co>		 * Could have been a for loop, but this looks</span>
+<span class=co>		 * simpler to me. */</span>
+		ubrk_first(brk_g);
+		<span class=cf>while</span> (ubrk_next(brk_g) != UBRK_DONE)
+			ngraph++;
+
+		ubrk_first(brk_w);
+		<span class=cf>while</span> (ubrk_next(brk_w) != UBRK_DONE)
+			<span class=cf>if</span> (ubrk_getRuleStatus(brk_w) ==
+			    UBRK_WORD_LETTER)
+				nword++;
+
+		<span class=co>/* count the newline if it exists */</span>
+		<span class=cf>if</span> (len &gt; <span class=dv>0</span> &amp;&amp; NEWLINE(line[len-<span class=dv>1</span>]))
+			nline++;
+	}
+
+	printf(<span class=st>"locale  : %s</span><span class=sc>\n</span><span class=st>"</span>
+	       <span class=st>"Grapheme: %zu</span><span class=sc>\n</span><span class=st>"</span>
+	       <span class=st>"Word    : %zu</span><span class=sc>\n</span><span class=st>"</span>
+	       <span class=st>"Line    : %zu</span><span class=sc>\n</span><span class=st>"</span>,
+	       locale, ngraph, nword, nline);
+
+	<span class=co>/* clean up iterators after use */</span>
+	ubrk_close(brk_g);
+	ubrk_close(brk_w);
+	u_fclose(in);
+}</code></pre></div>
+<p>Much better:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=bu>echo</span> <span class=st>"ᚈᚐ ᚋᚓ ᚔ ᚍᚏᚐ "</span> <span class=kw>|</span> <span class=ex>./uwc</span>
+<span class=ex>locale</span>  : en_US.UTF-8
+<span class=ex>Grapheme</span>: 14
+<span class=ex>Word</span>    : 4
+<span class=ex>Line</span>    : 1</code></pre></div>
+<h3 id=string-search>String search</h3>
+<p>When comparing strings, we can be more or less strict. A familiar example is case sensitivity, but Unicode provides other options. Comparing strings for equality is a degenerate case of sorting, where the strings must not only be determined as equal, but put in order. Sorting is called “collation” and the <a href=http://www.unicode.org/reports/tr10/>Unicode collation algorithm</a> supports multiple levels of increasing strictness.</p>
+<table class=table>
+<thead>
+<tr>
+<th>
+Level
+</th>
+<th>
+Description
+</th>
+</thead>
+<tbody>
+<tr>
+<td>
+Primary
+</td>
+<td>
+base characters
+</td>
+</tr>
+<tr>
+<td>
+Secondary
+</td>
+<td>
+accents
+</td>
+</tr>
+<tr>
+<td>
+Tertiary
+</td>
+<td>
+case/variant
+</td>
+</tr>
+<tr>
+<td>
+Quaternary
+</td>
+<td>
+punctuation
+</td>
+</tr>
+</tbody>
+</table>
+<p>Each level acts as a tie-breaker when strings match in previous levels. When searching we can choose how deep to check before declaring strings equal. To illustrate, consider a text file called words.txt containing these words:</p>
+<pre><code>Cooperate
+coöperate
+COÖPERATE
+co-operate
+final
+ﬁdes</code></pre>
+<p>We will write a program called <code>ugrep</code>, where we can specify a comparison level and search string. If we search for “cooperate” and allow comparisons up to the tertiary level it matches nothing:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=ex>./ugrep</span> 3 cooperate <span class=op>&lt;</span> words.txt
+<span class=co># it's an exact match, no results</span></code></pre></div>
+<p>It is possible to shift certain “ignorable” characters (like ‘-’) down to the quaternary level while conducting the original level 3 search:</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=ex>./ugrep</span> 3i cooperate <span class=op>&lt;</span> words.txt
+<span class=ex>4</span>: co-operate</code></pre></div>
+<p>Doing the same search at the secondary level disregards case, but is still sensitive to accents.</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=ex>./ugrep</span> 2 cooperate <span class=op>&lt;</span> words.txt
+<span class=ex>1</span>: Cooperate</code></pre></div>
+<p>Once again, can allow ignorables at this level.</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=ex>./ugrep</span> 2i cooperate <span class=op>&lt;</span> words.txt
+<span class=ex>1</span>: Cooperate
+<span class=ex>4</span>: co-operate</code></pre></div>
+<p>Finally, going only to the primary level, we match words with the same base letters, modulo case and accents.</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=ex>./ugrep</span> 1 cooperate <span class=op>&lt;</span> words.txt
+<span class=ex>1</span>: Cooperate
+<span class=ex>2</span>: coöperate
+<span class=ex>3</span>: COÖPERATE</code></pre></div>
+<p>Note that the idea of a “base character” is dependent on locale. In Swedish, the letters o and ö are quite distinct, and not minor variants as in English. Setting the locale prior to search restricts the results even at the primary level.</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=va>LC_COLLATE=</span>sv_SE <span class=ex>./ugrep</span> 1 cooperate <span class=op>&lt;</span> fun.txt
+<span class=ex>1</span>: Cooperate</code></pre></div>
+<p>One note about the tertiary level. It distinguishes not just case, but ligature presentation forms.</p>
+<div class=sourceCode><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class=ex>./ugrep</span> 3 ﬁ <span class=op>&lt;</span> words.txt
+<span class=ex>6</span>: ﬁdes
+
+<span class=co># vs</span>
+
+$ <span class=ex>./ugrep</span> 2 ﬁ <span class=op>&lt;</span> words.txt
+<span class=ex>5</span>: final
+<span class=ex>6</span>: ﬁdes</code></pre></div>
+<p>Pretty flexible, right? Let’s see the code.</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=co>/*** ugrep.c ***/</span>
+
+<span class=pp>#include </span><span class=im>&lt;locale.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;stdlib.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;string.h&gt;</span>
+
+<span class=pp>#include </span><span class=im>&lt;unicode/ucol.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/usearch.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/ustring.h&gt;</span>
+
+<span class=pp>#define BUFSZ 1024</span>
+
+<span class=dt>int</span> main(<span class=dt>int</span> argc, <span class=dt>char</span> **argv)
+{
+	<span class=dt>char</span> *locale;
+	UFILE *in;
+	UCollator *col;
+	UStringSearch *srch = NULL;
+	UErrorCode status = U_ZERO_ERROR;
+	UChar *needle, line[BUFSZ];
+	UColAttributeValue strength;
+	<span class=dt>int</span> ignoreInsignificant = <span class=dv>0</span>, asymmetric = <span class=dv>0</span>;
+	<span class=dt>size_t</span> n;
+	<span class=dt>long</span> i;
+
+	<span class=cf>if</span> (argc != <span class=dv>3</span>)
+	{
+		fprintf(stderr,
+			<span class=st>"Usage: %s {1,2,@,3}[i] pattern</span><span class=sc>\n</span><span class=st>"</span>, argv[<span class=dv>0</span>]);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=co>/* cryptic parsing for our cryptic options */</span>
+	<span class=cf>switch</span> (*argv[<span class=dv>1</span>])
+	{
+		<span class=cf>case</span> <span class=ch>'1'</span>:
+			strength = UCOL_PRIMARY;
+			<span class=cf>break</span>;
+		<span class=cf>case</span> <span class=ch>'2'</span>:
+			strength = UCOL_SECONDARY;
+			<span class=cf>break</span>;
+		<span class=cf>case</span> <span class=ch>'@'</span>:
+			strength = UCOL_SECONDARY, asymmetric = <span class=dv>1</span>;
+			<span class=cf>break</span>;
+		<span class=cf>case</span> <span class=ch>'3'</span>:
+			strength = UCOL_TERTIARY;
+			<span class=cf>break</span>;
+		<span class=cf>default</span>:
+			fprintf(stderr,
+				<span class=st>"Unknown strength: %s</span><span class=sc>\n</span><span class=st>"</span>, argv[<span class=dv>1</span>]);
+			<span class=cf>return</span> EXIT_FAILURE;
+	}
+	<span class=co>/* length of argv[1] is &gt;0 or we would have died */</span>
+	ignoreInsignificant = argv[<span class=dv>1</span>][strlen(argv[<span class=dv>1</span>])-<span class=dv>1</span>] == <span class=ch>'i'</span>;
+
+	n = strlen(argv[<span class=dv>2</span>]) + <span class=dv>1</span>;
+	<span class=co>/* if UTF-8 could encode it in n, then UTF-16</span>
+<span class=co>	 * should be able to as well */</span>
+	needle = malloc(n * <span class=kw>sizeof</span>(*needle));
+	u_strFromUTF8(needle, n, NULL, argv[<span class=dv>2</span>], -<span class=dv>1</span>, &amp;status);
+
+	<span class=co>/* searching is a degenerate case of collation,</span>
+<span class=co>	 * so we read the LC_COLLATE locale */</span>
+	<span class=cf>if</span> (!(locale = setlocale(LC_COLLATE, <span class=st>""</span>)))
+	{
+		fputs(<span class=st>"Cannot determine system collation locale</span><span class=sc>\n</span><span class=st>"</span>,
+		      stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	<span class=cf>if</span> (!(in = u_finit(stdin, NULL, NULL)))
+	{
+		fputs(<span class=st>"Error opening stdin as UFILE</span><span class=sc>\n</span><span class=st>"</span>, stderr);
+		<span class=cf>return</span> EXIT_FAILURE;
+	}
+
+	col = ucol_open(locale, &amp;status);
+	ucol_setStrength(col, strength);
+
+	<span class=cf>if</span> (ignoreInsignificant)
+		<span class=co>/* shift ignorable characters down to</span>
+<span class=co>		 * quaternary level */</span>
+		ucol_setAttribute(col, UCOL_ALTERNATE_HANDLING,
+		                  UCOL_SHIFTED, &amp;status);
+
+	<span class=co>/* Assumes all lines fit in BUFSZ. Should</span>
+<span class=co>	 * fix this in real code and not increment i */</span>
+	<span class=cf>for</span> (i = <span class=dv>1</span>; u_fgets(line, BUFSZ, in); ++i)
+	{
+		<span class=co>/* first time through, set up all options */</span>
+		<span class=cf>if</span> (!srch)
+		{
+			srch = usearch_openFromCollator(
+				needle, -<span class=dv>1</span>, line, -<span class=dv>1</span>,
+			    col, NULL, &amp;status
+			);
+			<span class=cf>if</span> (asymmetric)
+				usearch_setAttribute(
+					srch, USEARCH_ELEMENT_COMPARISON,
+					USEARCH_PATTERN_BASE_WEIGHT_IS_WILDCARD,
+					&amp;status
+				);
+		}
+		<span class=co>/* afterward just switch text */</span>
+		<span class=cf>else</span>
+			usearch_setText(srch, line, -<span class=dv>1</span>, &amp;status);
+
+		<span class=co>/* check if keyword appears in line */</span>
+		<span class=cf>if</span> (usearch_first(srch, &amp;status) != USEARCH_DONE)
+			u_printf(<span class=st>"%ld: %S"</span>, i, line);
+	}
+
+	usearch_close(srch);
+	ucol_close(col);
+	u_fclose(in);
+	free(needle);
+
+	<span class=cf>return</span> EXIT_SUCCESS;
+}</code></pre></div>
+<h3 id=comparing-strings-modulo-normalization>Comparing strings modulo normalization</h3>
+<p>In the concepts section, we saw a single grapheme can be constructed with different combinations of codepoints. In many cases when comparing strings for equality, we’re most interested in the strings being perceived by the user in the same way rather than a simple byte-for-byte match.</p>
+<p>The ICU library provides a <a href=http://icu-project.org/apiref/icu4c/unorm2_8h.html#a991e0fe6f0d062dd6e8e924517f3f437>unorm_compare</a> function which returns a value similar to strcmp, and acts in a normalization independent way. It normalizes both strings incrementally while comparing them, so it can stop early if it finds a difference.</p>
+<p>Here is code to check that the five ways of representing ộ are equivalent:</p>
+<div class=sourceCode><pre class="sourceCode c"><code class="sourceCode c"><span class=pp>#include </span><span class=im>&lt;stdio.h&gt;</span>
+<span class=pp>#include </span><span class=im>&lt;unicode/unorm2.h&gt;</span>
+
+<span class=dt>int</span> main(<span class=dt>void</span>)
+{
+	UErrorCode status = U_ZERO_ERROR;
+	UChar s[][<span class=dv>4</span>] = {
+		{<span class=bn>0x006f</span>,<span class=bn>0x0302</span>,<span class=bn>0x0323</span>,<span class=dv>0</span>},
+		{<span class=bn>0x006f</span>,<span class=bn>0x0323</span>,<span class=bn>0x0302</span>,<span class=dv>0</span>},
+		{<span class=bn>0x00f4</span>,<span class=bn>0x0323</span>,<span class=dv>0</span>,<span class=dv>0</span>},
+		{<span class=bn>0x1ecd</span>,<span class=bn>0x0302</span>,<span class=dv>0</span>,<span class=dv>0</span>},
+		{<span class=bn>0x1ed9</span>,<span class=dv>0</span>,<span class=dv>0</span>,<span class=dv>0</span>}
+	};
+
+	<span class=dt>const</span> <span class=dt>size_t</span> n = <span class=kw>sizeof</span>(s)/<span class=kw>sizeof</span>(s[<span class=dv>0</span>]);
+	<span class=dt>size_t</span> i;
+
+	<span class=cf>for</span> (i = <span class=dv>0</span>; i &lt; n; ++i)
+		printf(<span class=st>"%zu == %zu: %d</span><span class=sc>\n</span><span class=st>"</span>, i, (i+<span class=dv>1</span>)%n,
+			unorm_compare(
+				s[i], -<span class=dv>1</span>, s[(i+<span class=dv>1</span>)%n], -<span class=dv>1</span>, <span class=dv>0</span>, &amp;status));
+}</code></pre></div>
+<p>Output:</p>
+<pre><code>0 == 1: 0
+1 == 2: 0
+2 == 3: 0
+3 == 4: 0
+4 == 0: 0</code></pre>
+<p>A return value of 0 means the strings are equal.</p>
+<h3 id=confusable-strings>Confusable strings</h3>
+<p>Because Unicode introduces so many graphemes, there are more possibilities for scammers to confuse people using lookalike glyphs. For instance, domains like adoḅe.com or pаypal.com (with Cyrillic а) can direct unwary visitors to phishing sites. ICU contains an entire module for detecting “confusables,” those strings which are known to look too similar when rendered in common fonts. Each string is assigned a “skeleton” such that confusable strings get the same skeleton.</p>
+<p>For an example, see my utility <a href=https://github.com/begriffs/utofu>utofu</a>. It has a little extra complexity with sqlite access code, so I am not reproducing it here. It’s designed to check Unicode strings to detect changes over time that might be spoofing.</p>
+<p>The method of operation is this:</p>
+<ol style=list-style-type:decimal>
+<li>Read line as UTF-8</li>
+<li>Convert to Normalization Form C for consistency</li>
+<li>Calculate skeleton string</li>
+<li>Insert UTF-8 version of normalized input and its skeleton into a database if the skeleton doesn’t already exist</li>
+<li>Compare the normalized input string to the string in the database having corresponding skeleton. If not an exact match die with an error.</li>
+</ol>
+<h3 id=further-reading>Further reading</h3>
+<p>Unicode and internationalization is a huge topic. I could only scratch the surface in this article. I read and enjoyed sections from these books and reference materials, and would recommend them:</p>
+<ul>
+<li><a href=https://www.goodreads.com/book/show/1827814.Unicode_Demystified>Unicode Demystified</a> by Richard Gillam</li>
+<li><a href=http://unicode.org/versions/Unicode12.1.0/>The Unicode Standard</a></li>
+<li><a href=http://userguide.icu-project.org/>ICU User Guide</a></li>
+<li><a href=http://icu-project.org/apiref/icu4c/index.html>ICU4C API Reference</a></li>
+<li><a href=http://www.unicode.org/reports/>Unicode Technical Reports</a></li>
+</ul>
+ </div>
+</div>
+ </div>
+ </div>
+ 
+ 
+ <footer class=container>
+ <div id=newsletter class="well well-lg newsletter">
+ <h4>Newsletter</h4>
+ <p>
+ Do you like these videos and blog posts? Sign up for the
+ Begriffs Newsletter for notifications of new posts, events,
+ and ideas. (Pretty low-volume, once every few weeks.)
+ </p>
+ <form action=https://list.begriffs.com/lists/en603krpfq825/subscribe method=post accept-charset=utf-8 target=_blank>
+ <div class=form-group>
+ <label for=input_email>Email <span class=required>*</span></label>
+ <input type=text class=form-control name=EMAIL id=input_email placeholder value required>
+ </div>
+ <div class=form-group>
+ <label for=input_fname>First name <span class=required>*</span></label>
+ <input type=text class=form-control name=FNAME id=input_fname placeholder value required>
+ </div>
+ <div class=form-group>
+ <label for=input_lname>Last name <span class=required>*</span></label>
+ <input type=text class=form-control name=LNAME id=input_lname placeholder value required>
+ </div>
+ <div class=clearfix></div>
+ <div class=actions>
+ <button type=submit class="btn btn-primary btn-submit">Subscribe</button>
+ </div>
+ <div class=clearfix></div>
+ </form>
+ </div>
+ <p class=h-card>Written by
+ <span class=p-given-name>Joe</span> "<span class=p-nickname>begriffs</span>"
+ <span class=p-family-name>Nelson</span>.
+ <a href=mailto:joe@begriffs.com role=button class=u-email>joe@begriffs.com</a>
+ <sup><a href=https://begriffs.com/pgp.asc class=key>🔑</a></sup>
+ </p>
+ </footer>
+ 
